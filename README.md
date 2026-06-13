@@ -4,7 +4,15 @@ This project exposes the 0xSequence OMS wallet client as a local MCP server over
 
 ## Configure
 
-Create a `.env` file or set these values in the MCP host environment:
+Run setup:
+
+```bash
+pnpm run setup:mcp
+```
+
+This creates `.env` from `.env.example` if it does not already exist, builds the local Keychain helper, and prints the Codex MCP config block for this checkout.
+
+Then fill in `.env`:
 
 ```bash
 OMS_PUBLISHABLE_KEY=...
@@ -16,7 +24,7 @@ Wallet session data, redirect auth state, and the Node credential signer key are
 
 ## Run
 
-Build the local Keychain helper once:
+If you skip `pnpm run setup:mcp`, build the local Keychain helper once:
 
 ```bash
 pnpm build:keychain-helper
@@ -38,7 +46,7 @@ Example MCP host config:
     "oms-client-agent": {
       "command": "pnpm",
       "args": ["--silent", "mcp"],
-      "cwd": "<directory>"
+      "cwd": "/Users/theirname/path/to/oms-mcp"
     }
   }
 }

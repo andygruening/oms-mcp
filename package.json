@@ -4,7 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build:keychain-helper": "swiftc -suppress-warnings src/storage/keychain-helper.swift -o bin/keychain-helper",
+		"build:keychain-helper": "node --import tsx scripts/build-keychain-helper.ts",
 		"setup:mcp": "node --import tsx scripts/setup.ts",
 		"mcp": "node --import tsx src/mcp-server.ts",
 		"check": "pnpm --silent build:keychain-helper && node --import tsx -e \"import('./src/mcp-server.ts')\"",

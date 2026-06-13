@@ -2,12 +2,7 @@ import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-
-export interface StorageManager {
-  get(key: string): string | null;
-  set(key: string, value: string): void;
-  delete(key: string): void;
-}
+import type { StorageManager } from "@0xsequence/typescript-sdk";
 
 export class MacOSKeychainStorageManager implements StorageManager {
   constructor(private readonly serviceName: string) {

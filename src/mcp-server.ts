@@ -12,10 +12,12 @@ import {
   Networks,
   findNetworkByName,
   type Network,
+  type StorageManager,
 } from "@0xsequence/typescript-sdk";
 import { hexToBytes } from "viem";
 import { generatePrivateKey } from "viem/accounts";
 import { MacOSKeychainStorageManager } from "./storage/keychain-storage";
+import { LinuxSecretServiceStorageManager } from "./storage/secret-service-storage";
 
 type Tool = {
   name: string;
@@ -363,8 +365,8 @@ function createOmsClient() {
   return new OMSClient({
     publishableKey,
     projectId,
-    storage: new MacOSKeychainStorageManager(walletStorageServiceName),
-    redirectAuthStorage: new MacOSKeychainStorageManager(redirectAuthStorageServiceName),
+    storage: createSecureStorageManager(walletStorageServiceName),
+    redirectAuthStorage: createSecureStorageManager(redirectAuthStorageServiceName),
     credentialSigner: createCredentialSigner(),
   });
 }
@@ -376,7 +378,7 @@ function createCredentialSigner(): EthereumPrivateKeyCredentialSigner {
 }
 
 function getOrCreateCredentialPrivateKey(): `0x${string}` {
-  const storage = new MacOSKeychainStorageManager(credentialSignerStorageServiceName);
+  const storage = createSecureStorageManager(credentialSignerStorageServiceName);
   const storedPrivateKey = storage.get(credentialPrivateKeyStorageKey);
 
   if (storedPrivateKey) {
@@ -392,6 +394,20 @@ function getOrCreateCredentialPrivateKey(): `0x${string}` {
   const privateKey = generatePrivateKey();
   storage.set(credentialPrivateKeyStorageKey, privateKey);
   return privateKey;
+}
+
+function createSecureStorageManager(serviceName: string): StorageManager {
+  if (process.platform === "darwin") {
+    return new MacOSKeychainStorageManager(serviceName);
+  }
+
+  if (process.platform === "linux") {
+    return new LinuxSecretServiceStorageManager(serviceName);
+  }
+
+  throw new Error(
+    `Unsupported secure storage platform "${process.platform}". This MCP supports macOS Keychain and Linux Secret Service.`,
+  );
 }
 
 function isHexPrivateKey(value: string): value is `0x${string}` {

@@ -21,6 +21,8 @@ OMS_PROJECT_ID=...
 
 Wallet session data, redirect auth state, and the Node credential signer key are stored in macOS Keychain under fixed `oms-client-agent-mcp:*` service names.
 
+On Linux, the same values are stored through Freedesktop Secret Service using `secret-tool`. Install `libsecret-tools` and ensure a Secret Service provider such as GNOME Keyring or KWallet is available and unlocked.
+
 ## Run
 
 If you skip `pnpm run setup:mcp`, build the local Keychain helper once:

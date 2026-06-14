@@ -69,3 +69,30 @@ Example MCP host config:
 Default network is `amoy`. Pass a supported SDK network name such as `polygon`, `base`, or `sepolia` where tools accept `network`.
 
 Transfer tools accept raw integer amounts: `amountRaw` for ERC20 base units and `amountWei` for native token wei.
+
+## Example Prompts
+
+### Sign in
+
+```text
+Sign in using your@email.com
+```
+
+Wait for response, then enter OTP code:
+
+```text
+123456
+```
+
+### Send USDC
+
+```text
+Send 1 USDC to 0xB54d0b73a40f5b9a243D142EeDDA39Bb5ed76B50
+```
+
+### Get token balances
+
+```text
+Check the usdc balance for the local wallet address on amoy:
+USDC address: 0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582
+```

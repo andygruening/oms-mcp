@@ -50,7 +50,7 @@ Wait for response, then enter OTP code:
 ### Send USDC
 
 ```text
-Send 1 USDC to 0xB54d0b73a40f5b9a243D142EeDDA39Bb5ed76B50
+Send 1 USDC to 0xB54d0b73a40f5b9a243D142EeDDA39Bb5ed76B50 on amoy
 ```
 
 ### Get token balances

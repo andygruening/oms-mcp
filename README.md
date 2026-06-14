@@ -1,6 +1,6 @@
-# OMS Client Agent MCP
+# OMS Client MCP
 
-This project exposes the 0xSequence OMS wallet client as a local MCP server over stdio.
+This project exposes the OMS client as a local MCP server over stdio.
 
 ## Configure
 

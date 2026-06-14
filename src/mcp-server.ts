@@ -14,7 +14,7 @@ import {
   type Network,
   type StorageManager,
 } from "@0xsequence/typescript-sdk";
-import { hexToBytes } from "viem";
+import { hexToBytes, isAddress, type Address } from "viem";
 import { generatePrivateKey } from "viem/accounts";
 import { MacOSKeychainStorageManager } from "./storage/keychain-storage";
 import { LinuxSecretServiceStorageManager } from "./storage/secret-service-storage";
@@ -157,8 +157,8 @@ export const tools: Tool[] = [
     },
   },
   {
-    name: "oms_send_transaction",
-    description: "Send a transaction with the active OMS wallet session. Pass OMS SDK sendTransaction params as JSON.",
+    name: "oms_send_erc20_token",
+    description: "Send ERC20 tokens with the active OMS wallet session through wallet.callContract.",
     inputSchema: {
       type: "object",
       properties: {
@@ -166,13 +166,51 @@ export const tools: Tool[] = [
           type: "string",
           description: "Network name. Defaults to amoy.",
         },
-        params: {
-          type: "object",
-          description: "OMS wallet.sendTransaction params except network.",
-          additionalProperties: true,
+        tokenAddress: {
+          type: "string",
+          description: "ERC20 contract address.",
+        },
+        to: {
+          type: "string",
+          description: "Recipient wallet address.",
+        },
+        amountRaw: {
+          type: "string",
+          description: "Token amount in raw base units, for example 1000000 for 1 USDC with 6 decimals.",
+        },
+        waitForStatus: {
+          type: "boolean",
+          description: "Whether to wait for transaction status. Defaults to the SDK behavior.",
         },
       },
-      required: ["params"],
+      required: ["tokenAddress", "to", "amountRaw"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "oms_send_native_token",
+    description: "Send native tokens with the active OMS wallet session through wallet.sendTransaction.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        network: {
+          type: "string",
+          description: "Network name. Defaults to amoy.",
+        },
+        to: {
+          type: "string",
+          description: "Recipient wallet address.",
+        },
+        amountWei: {
+          type: "string",
+          description: "Native token amount in wei.",
+        },
+        waitForStatus: {
+          type: "boolean",
+          description: "Whether to wait for transaction status. Defaults to the SDK behavior.",
+        },
+      },
+      required: ["to", "amountWei"],
       additionalProperties: false,
     },
   },
@@ -247,8 +285,10 @@ export async function runTool(
       return getTokenBalances(args);
     case "oms_get_native_token_balance":
       return getNativeTokenBalance(args);
-    case "oms_send_transaction":
-      return sendTransaction(args);
+    case "oms_send_erc20_token":
+      return sendErc20Token(args);
+    case "oms_send_native_token":
+      return sendNativeToken(args);
     case "oms_sign_out":
       return signOut();
     default:
@@ -342,15 +382,36 @@ async function getNativeTokenBalance(args: Record<string, unknown>): Promise<unk
   });
 }
 
-async function sendTransaction(args: Record<string, unknown>): Promise<unknown> {
-  const params = asObject(args.params, "params");
+async function sendErc20Token(args: Record<string, unknown>): Promise<unknown> {
   const network = networkFromArgs(args);
+  const tokenAddress = requiredAddress(args.tokenAddress, "tokenAddress");
+  const to = requiredAddress(args.to, "to");
+  const amountRaw = requiredPositiveBigInt(args.amountRaw, "amountRaw");
+  const waitForStatus = optionalBoolean(args.waitForStatus, "waitForStatus");
+  const oms = getOmsClientWithSession();
+
+  return oms.wallet.callContract({
+    network,
+    contractAddress: tokenAddress,
+    method: "transfer(address,uint256)",
+    args: [to, amountRaw.toString()],
+    ...(waitForStatus === undefined ? {} : { waitForStatus }),
+  });
+}
+
+async function sendNativeToken(args: Record<string, unknown>): Promise<unknown> {
+  const network = networkFromArgs(args);
+  const to = requiredAddress(args.to, "to");
+  const amountWei = requiredPositiveBigInt(args.amountWei, "amountWei");
+  const waitForStatus = optionalBoolean(args.waitForStatus, "waitForStatus");
   const oms = getOmsClientWithSession();
 
   return oms.wallet.sendTransaction({
-    ...params,
     network,
-  } as never);
+    to,
+    value: amountWei,
+    ...(waitForStatus === undefined ? {} : { waitForStatus }),
+  });
 }
 
 async function signOut(): Promise<unknown> {
@@ -505,6 +566,28 @@ function requiredString(value: unknown, name: string): string {
 function optionalString(value: unknown, name: string): string | undefined {
   if (value === undefined) return undefined;
   return requiredString(value, name);
+}
+
+function requiredAddress(value: unknown, name: string): Address {
+  const address = requiredString(value, name);
+  if (!isAddress(address)) {
+    throw new Error(`${name} must be a valid EVM address`);
+  }
+  return address;
+}
+
+function requiredPositiveBigInt(value: unknown, name: string): bigint {
+  const rawValue = requiredString(value, name);
+  if (!/^[0-9]+$/.test(rawValue)) {
+    throw new Error(`${name} must be a positive integer string`);
+  }
+
+  const parsedValue = BigInt(rawValue);
+  if (parsedValue <= 0n) {
+    throw new Error(`${name} must be greater than zero`);
+  }
+
+  return parsedValue;
 }
 
 function optionalNumber(value: unknown, name: string): number | undefined {

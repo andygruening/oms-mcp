@@ -15,7 +15,8 @@ test("exports the expected MCP tools", () => {
       "oms_sign_message",
       "oms_get_token_balances",
       "oms_get_native_token_balance",
-      "oms_send_transaction",
+      "oms_send_erc20_token",
+      "oms_send_native_token",
       "oms_sign_out",
     ],
   );
@@ -64,8 +65,27 @@ test("argument validation fails before touching the OMS client", async () => {
   );
 
   await assert.rejects(
-    () => runTool("oms_send_transaction", { params: null }),
-    /params must be an object/,
+    () => runTool("oms_send_erc20_token", { tokenAddress: "not-an-address" }),
+    /tokenAddress must be a valid EVM address/,
+  );
+
+  await assert.rejects(
+    () =>
+      runTool("oms_send_erc20_token", {
+        tokenAddress: "0x0000000000000000000000000000000000000000",
+        to: "0x0000000000000000000000000000000000000001",
+        amountRaw: "1.5",
+      }),
+    /amountRaw must be a positive integer string/,
+  );
+
+  await assert.rejects(
+    () =>
+      runTool("oms_send_native_token", {
+        to: "0x0000000000000000000000000000000000000001",
+        amountWei: "0",
+      }),
+    /amountWei must be greater than zero/,
   );
 });
 

@@ -62,7 +62,10 @@ Example MCP host config:
 - `oms_sign_message`: signs a message with the active wallet session.
 - `oms_get_token_balances`: queries token balances through the OMS indexer.
 - `oms_get_native_token_balance`: queries the native token balance.
-- `oms_send_transaction`: passes JSON transaction params to `wallet.sendTransaction`.
+- `oms_send_erc20_token`: sends ERC20 tokens through `wallet.callContract` using `transfer(address,uint256)`.
+- `oms_send_native_token`: sends native tokens through `wallet.sendTransaction`.
 - `oms_sign_out`: clears the active wallet session.
 
 Default network is `amoy`. Pass a supported SDK network name such as `polygon`, `base`, or `sepolia` where tools accept `network`.
+
+Transfer tools accept raw integer amounts: `amountRaw` for ERC20 base units and `amountWei` for native token wei.
